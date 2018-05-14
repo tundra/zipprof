@@ -9,6 +9,8 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <cstring>
+#include <algorithm>
 
 
 using namespace zipprof;
@@ -87,7 +89,29 @@ void ZProf::profile_file(std::string path) {
   std::string str = read_file(path);
   Array<const uint8_t> data(reinterpret_cast<const uint8_t*>(str.c_str()), str.size());
   DeflateProfile profile = Profiler::profile_zlib(data);
-  std::cout << profile.block_count() << std::endl;
+  std::cout << "=== " << path << " ===" << std::endl;
+  std::cout << "deflated_size: " << profile.deflated_size() << "b" << std::endl;
+  std::cout << "inflated_size: " << profile.inflated_size() << "b" << std::endl;
+  constexpr uint32_t kBucketCount = 16;
+  uint32_t buckets[kBucketCount];
+  uint32_t high_water_mark = 0;
+  memset(buckets, 0, sizeof(buckets));
+  for (uint32_t i = 0; i < profile.inflated_size(); i++) {
+    double contrib = profile.literal_contribution(i);
+    uint32_t bucket = static_cast<uint32_t>(contrib * (kBucketCount - 1));
+    buckets[bucket]++;
+    high_water_mark = std::max(high_water_mark, buckets[bucket]);
+  }
+  constexpr uint32_t kBarHeight = 16;
+  for (uint32_t ih = 0; ih < kBarHeight; ih++) {
+    double limit = static_cast<double>(kBarHeight - ih) / kBarHeight;
+    for (uint32_t ib = 0; ib < kBucketCount; ib++) {
+      double height = static_cast<double>(buckets[ib]) / high_water_mark;
+      bool show = height >= limit;
+      std::cout << (show ? "*" : " ") << " ";
+    }
+    std::cout << std::endl;
+  }
 }
 
 int ZProf::main(Array<char*> cmdline) {
