@@ -1,9 +1,8 @@
 // Copyright (c) 2018 Tundra. All right reserved.
 // Use of this code is governed by the terms defined in LICENSE.
 
-#include "utils_inl.hh"
-
 #include "gtest/gtest.h"
+#include "utils_inl.hh"
 
 using namespace zipprof;
 using namespace zipprof::impl;

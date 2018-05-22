@@ -86,6 +86,9 @@ struct ByteStat {
 
   // How many bits did it take to encode this byte?
   uint32_t bit_size;
+
+  // The literal value of this byte.
+  uint8_t value;
 };
 
 struct BlockStat {

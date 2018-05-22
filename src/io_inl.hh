@@ -52,20 +52,22 @@ uint8_t ArrayBitReader::next_byte() {
   return result;
 }
 
-void ProfilingByteWriter::copy(uint8_t data, uint32_t source, uint32_t copy, uint32_t bit_size) {
+void ProfilingByteWriter::copy(uint8_t value, uint32_t source, uint32_t copy, uint32_t bit_size) {
   ASSERT(source <= cursor_);
   ByteStat stat;
   stat.source = source;
   stat.copy = (copy + 1);
   stat.bit_size = bit_size;
+  stat.value = value;
   add_stat(stat);
 }
 
-void ProfilingByteWriter::append(uint8_t data, uint32_t bit_size) {
+void ProfilingByteWriter::append(uint8_t value, uint32_t bit_size) {
   ByteStat stat;
   stat.source = cursor_;
   stat.copy = 0;
   stat.bit_size = bit_size;
+  stat.value = value;
   literal_count_++;
   add_stat(stat);
 }

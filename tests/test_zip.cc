@@ -3,11 +3,12 @@
 
 #include "zip_inl.hh"
 
-#include "utils_inl.hh"
-
 #include <zlib.h>
 
+#include "testutils_inl.hh"
+
 #include "gtest/gtest.h"
+#include "testutils_inl.hh"
 
 using namespace zipprof;
 using namespace zipprof::impl;
@@ -152,4 +153,20 @@ TEST(zip, simple) {
   test_transflate("FoFooFooo", Z_NO_COMPRESSION);
   test_transflate("FoFooFooo", Z_BEST_COMPRESSION);
   test_transflate(kLipsum);
+}
+
+TEST(zip, archive) {
+  std::string zip_str = read_file("../tests/data/lipsums.zip");
+  Archive::Impl *arc = Archive::Impl::open(array<const uint8_t>(reinterpret_cast<const uint8_t*>(zip_str.c_str()), zip_str.size()));
+  std::vector<std::string> paths;
+  arc->add_paths(&paths);
+  EXPECT_EQ(4, paths.size());
+  EXPECT_STREQ("lipsums/1.txt", paths[0].c_str());
+  EXPECT_STREQ("lipsums/2.txt", paths[1].c_str());
+  EXPECT_STREQ("lipsums/3.txt", paths[2].c_str());
+  EXPECT_STREQ("lipsums/4.txt", paths[3].c_str());
+  EXPECT_EQ(1221, arc->stream("lipsums/1.txt").size());
+  EXPECT_EQ(1128, arc->stream("lipsums/2.txt").size());
+  EXPECT_EQ(1093, arc->stream("lipsums/3.txt").size());
+  EXPECT_EQ(1174, arc->stream("lipsums/4.txt").size());
 }

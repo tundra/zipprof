@@ -17,6 +17,7 @@ public:
 
   impl::array<uint32_t> origins();
   impl::array<uint32_t> literal_weights();
+  impl::array<uint8_t> contents();
 
   uint32_t deflated_size_;
   uint32_t inflated_size_;
@@ -25,6 +26,7 @@ public:
   impl::array<impl::BlockStat> block_stats_;
   impl::array<uint32_t> origins_;
   impl::array<uint32_t> literal_weights_;
+  impl::array<uint8_t> contents_;
 };
 
 } // namespace zipprof

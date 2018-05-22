@@ -117,5 +117,21 @@ private:
 };
 
 } // namespace impl
+
+class Archive::Impl {
+public:
+  virtual ~Impl() { }
+  Impl();
+  virtual void add_paths(std::vector<std::string> *paths_out) = 0;
+  virtual impl::array<const uint8_t> stream(std::string path) = 0;
+
+  Array<std::string> entries();
+
+  static Impl *open(impl::array<const uint8_t> bytes);
+
+private:
+  std::vector<std::string> entries_;
+};
+
 } // namespace zipprof
 

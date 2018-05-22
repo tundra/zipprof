@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string>
+#include <memory>
 
 namespace zipprof {
 
@@ -29,11 +30,8 @@ private:
 class DeflateProfile {
 public:
   class Impl;
-
   DeflateProfile();
   ~DeflateProfile();
-  DeflateProfile(DeflateProfile &&that);
-  DeflateProfile &operator=(DeflateProfile&& that);
 
   // The size in bytes of the compressed data. This is the size of the full
   // deflate structure, including code tables etc.
@@ -61,12 +59,15 @@ public:
   // count.
   double literal_contribution(uint32_t index);
 
+  // Returns the deflated contents of the input.
+  Array<const uint8_t> contents();
+
 private:
   friend class Profiler;
   DeflateProfile(Impl *impl);
 
   Impl &impl() { return *impl_; }
-  Impl *impl_;
+  std::shared_ptr<Impl> impl_;
 };
 
 class Compressor {
@@ -98,6 +99,24 @@ public:
   // compressor.
   static DeflateProfile profile_string(std::string str,
       const Compressor &compressor = Compressor::zlib_best_compression());
+};
+
+class Archive {
+public:
+  class Impl;
+  Archive(Array<const uint8_t> data);
+  ~Archive();
+
+  // Returns a profile of the file within this archive with the given path.
+  DeflateProfile profile(std::string path);
+
+  // Returns an array of the entries within this archive. The result is owned
+  // by the archive and valid until the instance is destroyed.
+  Array<std::string> entries();
+
+private:
+  Impl &impl() { return *impl_; }
+  std::shared_ptr<Impl> impl_;
 };
 
 } // namespace zipprof

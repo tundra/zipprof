@@ -16,7 +16,7 @@ endif()
 
 file(GLOB src_files "src/zip.cc" "src/io.cc" "src/zipprof.cc" "src/huff.cc")
 add_library(zipprof SHARED ${src_files})
-include_directories(zipprof "include")
+include_directories(zipprof "include" "lib")
 target_link_libraries(zipprof "z")
 
 add_executable(zprof "src/main.cc")

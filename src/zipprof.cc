@@ -123,20 +123,12 @@ DeflateProfile Profiler::profile_string(std::string str, const Compressor &compr
   return result;
 }
 
-DeflateProfile::DeflateProfile()
-    : impl_(NULL) { }
-
-DeflateProfile::DeflateProfile(DeflateProfile &&that)
-    : impl_(that.impl_) {
-  that.impl_ = NULL;
-}
+DeflateProfile::DeflateProfile() { }
 
 DeflateProfile::DeflateProfile(Impl *impl)
     : impl_(impl) { }
 
-DeflateProfile::~DeflateProfile() {
-  delete impl_;
-}
+DeflateProfile::~DeflateProfile() { }
 
 uint32_t DeflateProfile::deflated_size() {
   return impl().deflated_size_;
@@ -160,6 +152,11 @@ uint32_t DeflateProfile::literal_weight(uint32_t index) {
 
 double DeflateProfile::literal_contribution(uint32_t index) {
   return 1.0 / literal_weight(index);
+}
+
+Array<const uint8_t> DeflateProfile::contents() {
+  array<const uint8_t> raw_contents = impl().contents();
+  return Array<const uint8_t>(raw_contents.begin(), raw_contents.size());
 }
 
 DeflateProfile::Impl::Impl(uint32_t deflated_size, uint32_t inflated_size,
@@ -195,9 +192,37 @@ array<uint32_t> DeflateProfile::Impl::literal_weights() {
   return literal_weights_;
 }
 
+array<uint8_t> DeflateProfile::Impl::contents() {
+  if (contents_.begin() == NULL) {
+    contents_ = array<uint8_t>(new uint8_t[inflated_size_], inflated_size_);
+    for (uint32_t i = 0; i < inflated_size_; i++)
+      contents_[i] = byte_stats_[i].value;
+  }
+  return contents_;
+}
+
 DeflateProfile::Impl::~Impl() {
   delete[] byte_stats_.begin();
   delete[] block_stats_.begin();
   delete[] origins_.begin();
   delete[] literal_weights_.begin();
+  delete[] contents_.begin();
+}
+
+Archive::Archive(Array<const uint8_t> data)
+    : impl_(Impl::open(data)) {
+
+}
+
+Archive::~Archive() { }
+
+Array<std::string> Archive::entries() {
+  return impl().entries();
+}
+
+DeflateProfile Archive::profile(std::string path) {
+  array<const uint8_t> data = impl().stream(path);
+  if (data.size() == 0)
+    return DeflateProfile();
+  return Profiler::profile_deflated(Array<const uint8_t>(data.begin(), data.size()));
 }
